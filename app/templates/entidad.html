@@ -54,5 +54,15 @@
             <button type="submit">✨ Crear Categoría</button>
         </form>
     </div>
+
+    <div class="zona-peligro">
+        <p>⚠️ Eliminar <strong>{{ entity.name }}</strong> borrará también sus
+           {{ entity.categories|length }} categoría(s), {{ entity.assets|length }} activo(s),
+           sus planes de mantenimiento y todo el historial de costos. No se puede deshacer.</p>
+        <form method="POST" action="{{ url_for('main.eliminar_entidad', entity_id=entity.id) }}"
+              onsubmit="return confirm('¿Eliminar {{ entity.name }} y TODO su contenido?\n\nEsta acción no se puede deshacer.');">
+            <button type="submit" class="btn-borrar">🗑 Eliminar esta Entidad</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

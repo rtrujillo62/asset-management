@@ -17,7 +17,7 @@
 <div class="header">
     <h1>🚗 {{ asset.name }}</h1>
     <p>
-        {{ asset.brand or '' }} {{ asset.model or '' }}
+        {{ asset.brand or '' }} {{ asset.model or '' }}{% if asset.year %} ({{ asset.year }}){% endif %}
         {%- if asset.serial_number %} · Serie: {{ asset.serial_number }}{% endif %}
         · Comprado el {{ asset.purchase_date.strftime('%d/%m/%Y') }}
     </p>
@@ -26,37 +26,143 @@
 <div class="grid">
     <div class="card"><h2>Precio de Compra</h2><div class="texto">${{ '%.2f'|format(asset.purchase_price or 0) }}</div></div>
     <div class="card"><h2>Costo Total</h2><div class="texto">${{ '%.2f'|format(asset.get_total_cost()) }}</div></div>
+    {% if asset.current_kilometers is not none %}
+    <div class="card"><h2>Odómetro</h2><div class="texto">{{ '{:,.0f}'.format(asset.current_kilometers) }} km</div></div>
+    {% endif %}
+    {% if asset.current_hours is not none %}
+    <div class="card"><h2>Horómetro</h2><div class="texto">{{ '{:,.0f}'.format(asset.current_hours) }} h</div></div>
+    {% endif %}
     <div class="card"><h2>Planes</h2><div class="number">{{ asset.maintenance_plans|length }}</div></div>
-    <div class="card"><h2>Movimientos</h2><div class="number">{{ asset.movements|length }}</div></div>
 </div>
 
+<!-- REPORTAR LECTURA (solo si algún plan usa km u horas) -->
+{% if asset.usa_kilometros() or asset.usa_horas() %}
+<div class="section">
+    <h2>📍 Reportar Lectura Actual</h2>
+    <div class="form-section">
+        {% if asset.last_reading_date %}
+        <p style="margin-bottom:16px; color:#666; font-size:14px;">
+            Última lectura registrada: <strong>{{ asset.last_reading_date.strftime('%d/%m/%Y') }}</strong>
+        </p>
+        {% endif %}
+        <form method="POST" action="{{ url_for('main.reportar_lectura', asset_id=asset.id) }}">
+            <div class="form-row">
+                {% if asset.usa_kilometros() %}
+                <div class="form-group">
+                    <label>Odómetro (km)</label>
+                    <input type="number" step="0.01" name="current_kilometers"
+                           value="{{ asset.current_kilometers or '' }}" placeholder="Ej: 45000">
+                </div>
+                {% endif %}
+                {% if asset.usa_horas() %}
+                <div class="form-group">
+                    <label>Horómetro (horas de uso)</label>
+                    <input type="number" step="0.01" name="current_hours"
+                           value="{{ asset.current_hours or '' }}" placeholder="Ej: 1200">
+                </div>
+                {% endif %}
+            </div>
+            <button type="submit">📍 Actualizar Lectura</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<!-- PLANES -->
 <div class="section">
     <h2>⚙️ Planes de Mantenimiento</h2>
     {% if asset.maintenance_plans %}
         {% for plan in asset.maintenance_plans %}
+        {% set estado = plan.get_status() %}
         <div class="item">
             <div class="item-title">
                 {{ plan.name }}
-                {% if plan.get_status() == 'overdue' %}
-                    <span class="badge badge-overdue">VENCIDO</span>
-                {% elif plan.get_status() == 'due' %}
-                    <span class="badge badge-due">PRÓXIMO</span>
-                {% elif plan.get_status() == 'ok' %}
-                    <span class="badge badge-ok">OK</span>
-                {% else %}
-                    <span class="badge badge-info">SIN FECHA</span>
-                {% endif %}
+                {% if estado == 'overdue' %}<span class="badge badge-overdue">VENCIDO</span>
+                {% elif estado == 'due' %}<span class="badge badge-due">PRÓXIMO</span>
+                {% elif estado == 'ok' %}<span class="badge badge-ok">OK</span>
+                {% else %}<span class="badge badge-info">FALTA LECTURA</span>{% endif %}
+                {% if plan.es_combinado() %}<span class="badge badge-info">COMBINADO</span>{% endif %}
             </div>
             <div class="item-details">
                 {% if plan.description %}{{ plan.description }}<br>{% endif %}
-                <strong>Cada:</strong> {{ plan.interval_value|int }} {{ plan.interval_type }}
-                {%- if plan.secondary_type %} <strong>o</strong> {{ plan.secondary_value|int }} {{ plan.secondary_type }} (lo que ocurra primero){% endif %} |
-                <strong>Próximo:</strong> {{ plan.next_due.strftime('%d/%m/%Y') if plan.next_due else 'Según uso' }} |
+
+                {% for e in plan.evaluar() %}
+                    {% if e.tipo == 'days' %}
+                        ⏰ <strong>Cada {{ plan.interval_value|int if plan.interval_type == 'days' else plan.secondary_value|int }} días</strong>
+                        → vence {{ e.objetivo.strftime('%d/%m/%Y') }}
+                        {% if e.restante < 0 %}<span style="color:#c0392b;font-weight:700;">(vencido hace {{ (e.restante * -1)|int }} días)</span>
+                        {% else %}(faltan {{ e.restante|int }} días){% endif %}
+                    {% elif e.tipo == 'kilometers' %}
+                        🚗 <strong>Cada {{ plan.interval_value|int if plan.interval_type == 'kilometers' else plan.secondary_value|int }} km</strong>
+                        {% if e.estado == 'sin_lectura' %}
+                            → <em>reporta el odómetro para calcular</em>
+                        {% else %}
+                            → toca a los {{ '{:,.0f}'.format(e.objetivo) }} km
+                            {% if e.restante < 0 %}<span style="color:#c0392b;font-weight:700;">(vencido por {{ '{:,.0f}'.format(e.restante * -1) }} km)</span>
+                            {% else %}(faltan {{ '{:,.0f}'.format(e.restante) }} km){% endif %}
+                        {% endif %}
+                    {% elif e.tipo == 'hours' %}
+                        ⚙️ <strong>Cada {{ plan.interval_value|int if plan.interval_type == 'hours' else plan.secondary_value|int }} horas</strong>
+                        {% if e.estado == 'sin_lectura' %}
+                            → <em>reporta el horómetro para calcular</em>
+                        {% else %}
+                            → toca a las {{ '{:,.0f}'.format(e.objetivo) }} h
+                            {% if e.restante < 0 %}<span style="color:#c0392b;font-weight:700;">(vencido por {{ '{:,.0f}'.format(e.restante * -1) }} h)</span>
+                            {% else %}(faltan {{ '{:,.0f}'.format(e.restante) }} h){% endif %}
+                        {% endif %}
+                    {% endif %}
+                    <br>
+                {% endfor %}
+
                 <strong>Costo Est.:</strong> ${{ '%.2f'|format(plan.estimated_cost or 0) }}
-                {%- if plan.last_execution %}<br><strong>Último realizado:</strong> {{ plan.last_execution.strftime('%d/%m/%Y') }}{% endif %}
-                {%- if plan.last_kilometers %} · <strong>Odómetro:</strong> {{ plan.last_kilometers|int }} km{% endif %}
-                {%- if plan.last_hours %} · <strong>Horas:</strong> {{ plan.last_hours|int }}{% endif %}
+                {%- if plan.last_execution %} · <strong>Último realizado:</strong> {{ plan.last_execution.strftime('%d/%m/%Y') }}
+                    {%- if plan.last_kilometers %} a los {{ '{:,.0f}'.format(plan.last_kilometers) }} km{% endif %}
+                    {%- if plan.last_hours %} a las {{ '{:,.0f}'.format(plan.last_hours) }} h{% endif %}
+                {%- endif %}
             </div>
+
+            <details style="margin-top:14px;">
+                <summary style="cursor:pointer; color:#667eea; font-weight:600; font-size:14px;">
+                    ✅ Registrar que ya se realizó
+                </summary>
+                <form method="POST" action="{{ url_for('main.ejecutar_plan', plan_id=plan.id) }}"
+                      style="margin-top:14px; padding-top:14px; border-top:1px solid #e5e5e5;">
+                    <div class="form-row-3">
+                        {% if plan.usa_tipo('kilometers') %}
+                        <div class="form-group">
+                            <label>Odómetro hoy (km)</label>
+                            <input type="number" step="0.01" name="current_kilometers"
+                                   value="{{ asset.current_kilometers or '' }}">
+                        </div>
+                        {% endif %}
+                        {% if plan.usa_tipo('hours') %}
+                        <div class="form-group">
+                            <label>Horómetro hoy</label>
+                            <input type="number" step="0.01" name="current_hours"
+                                   value="{{ asset.current_hours or '' }}">
+                        </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label>Costo real ($)</label>
+                            <input type="number" step="0.01" name="actual_cost"
+                                   placeholder="{{ plan.estimated_cost or 0 }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Notas</label>
+                            <input type="text" name="notes" placeholder="Ej: Taller Pardini">
+                        </div>
+                    </div>
+                    <button type="submit">✅ Marcar como Realizado</button>
+                </form>
+            </details>
+
+            <form method="POST" action="{{ url_for('main.eliminar_plan', plan_id=plan.id) }}"
+                  style="margin-top:12px;"
+                  onsubmit="return confirm('¿Eliminar el plan {{ plan.name }}?');">
+                <button type="submit" class="btn-borrar" style="padding:5px 14px; font-size:12px;">
+                    🗑 Eliminar plan
+                </button>
+            </form>
         </div>
         {% endfor %}
     {% else %}
@@ -64,6 +170,7 @@
     {% endif %}
 </div>
 
+<!-- CREAR PLAN -->
 <div class="section">
     <h2>➕ Crear Plan de Mantenimiento a la Medida</h2>
     <div class="form-section">
@@ -74,22 +181,25 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Tipo de Intervalo</label>
+                    <label>Se mide por</label>
                     <select name="interval_type" required>
                         <option value="days">⏰ Días</option>
                         <option value="kilometers">🚗 Kilómetros</option>
                         <option value="hours">⚙️ Horas de uso</option>
-                        <option value="combined">🔄 Combinado</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Valor del Intervalo</label>
+                    <label>Cada cuánto</label>
                     <input type="number" step="0.01" name="interval_value" placeholder="Ej: 180" required>
                 </div>
             </div>
+            <p style="margin:6px 0 16px; color:#8a6d3b; font-size:13px;">
+                💡 Para un plan combinado (lo que ocurra primero), llena también los dos campos de abajo.
+                Ej: cada <strong>180 días</strong> <em>o</em> cada <strong>5.000 km</strong>.
+            </p>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Intervalo Secundario (solo si es Combinado)</label>
+                    <label>...o también por (opcional)</label>
                     <select name="secondary_type">
                         <option value="">Ninguno</option>
                         <option value="days">⏰ Días</option>
@@ -98,7 +208,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Valor Secundario</label>
+                    <label>Cada cuánto (secundario)</label>
                     <input type="number" step="0.01" name="secondary_value" placeholder="Ej: 5000">
                 </div>
             </div>
@@ -112,11 +222,38 @@
                     <input type="text" name="description" placeholder="Ej: Aceite sintético 5W-30">
                 </div>
             </div>
+
+            <details style="margin:10px 0 18px;">
+                <summary style="cursor:pointer; color:#667eea; font-weight:600; font-size:14px;">
+                    📅 ¿Ya se le hizo este mantenimiento antes? (opcional)
+                </summary>
+                <p style="margin:12px 0; color:#8a6d3b; font-size:13px;">
+                    Si no llenas nada, se asume que el mantenimiento se hace <strong>hoy</strong> y el
+                    próximo se cuenta desde ahora. Si ya se hizo antes, indica cuándo para que el
+                    cálculo sea real.
+                </p>
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label>Fecha del último</label>
+                        <input type="date" name="last_execution">
+                    </div>
+                    <div class="form-group">
+                        <label>Odómetro en ese momento (km)</label>
+                        <input type="number" step="0.01" name="last_kilometers" placeholder="Ej: 40000">
+                    </div>
+                    <div class="form-group">
+                        <label>Horómetro en ese momento</label>
+                        <input type="number" step="0.01" name="last_hours" placeholder="Ej: 1100">
+                    </div>
+                </div>
+            </details>
+
             <button type="submit">✨ Crear Plan</button>
         </form>
     </div>
 </div>
 
+<!-- MOVIMIENTOS -->
 <div class="section">
     <h2>💰 Historial de Movimientos</h2>
     {% if movimientos %}
@@ -136,5 +273,15 @@
     {% else %}
         <div class="vacio">Sin movimientos registrados.</div>
     {% endif %}
+
+    <div class="zona-peligro">
+        <p>⚠️ Eliminar <strong>{{ asset.name }}</strong> borrará sus
+           {{ asset.maintenance_plans|length }} plan(es) de mantenimiento y sus
+           {{ asset.movements|length }} movimiento(s) de costo.</p>
+        <form method="POST" action="{{ url_for('main.eliminar_activo', asset_id=asset.id) }}"
+              onsubmit="return confirm('¿Eliminar el activo {{ asset.name }}?\n\nEsta acción no se puede deshacer.');">
+            <button type="submit" class="btn-borrar">🗑 Eliminar este Activo</button>
+        </form>
+    </div>
 </div>
 {% endblock %}

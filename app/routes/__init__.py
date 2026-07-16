@@ -10,3 +10,4 @@ from app.routes import maintenance_plans
 from app.routes import movements
 from app.routes import dashboard
 from app.routes import forms
+from app.routes import eliminar
