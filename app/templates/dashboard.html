@@ -1,405 +1,64 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Management - Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .header {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            margin-bottom: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-            border-top: 4px solid #667eea;
-        }
-        
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 32px;
-        }
-        
-        .header p {
-            color: #666;
-            font-size: 16px;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-top: 4px solid #667eea;
-        }
-        
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-        }
-        
-        .card h2 {
-            color: #999;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        
-        .card .number {
-            font-size: 56px;
-            font-weight: 700;
-            color: #667eea;
-        }
-        
-        .section {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .section h2 {
-            color: #333;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 3px solid #f0f0f0;
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .form-section {
-            background: linear-gradient(135deg, #f5f7ff 0%, #f0f4ff 100%);
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #e9ecf8;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 600;
-            color: #333;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        .form-group input::placeholder {
-            color: #bbb;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-            background: white;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .form-row-full {
-            grid-column: 1 / -1;
-        }
-        
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 40px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
-            letter-spacing: 0.5px;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        .item {
-            background: linear-gradient(135deg, #f9fafb 0%, #f5f7fb 100%);
-            padding: 20px;
-            margin-bottom: 15px;
-            border-radius: 12px;
-            border-left: 5px solid #667eea;
-            transition: all 0.3s ease;
-            border: 1px solid #f0f0f0;
-            border-left: 5px solid #667eea;
-        }
-        
-        .item:hover {
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        }
-        
-        .item-title {
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-        
-        .item-details {
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        .empty {
-            text-align: center;
-            color: #999;
-            padding: 50px 30px;
-            font-style: italic;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            margin-right: 10px;
-            letter-spacing: 0.5px;
-        }
-        
-        .badge-ok {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .badge-due {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .badge-overdue {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .api-link {
-            text-align: center;
-            padding: 30px;
-            background: linear-gradient(135deg, #f9fafb 0%, #f5f7fb 100%);
-            border-radius: 12px;
-            border: 2px solid #f0f0f0;
-        }
-        
-        .api-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 16px;
-        }
-        
-        .api-link a:hover {
-            text-decoration: underline;
-            color: #764ba2;
-        }
-        
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                padding: 25px;
-            }
-            
-            .section {
-                padding: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🏠 Asset Management Dashboard</h1>
-            <p>Sistema moderno de gestión de activos y mantenimiento</p>
-        </div>
-        
-        <div class="grid">
-            <div class="card">
-                <h2>Entidades</h2>
-                <div class="number">{{ entities|length }}</div>
+{% extends "base.html" %}
+{% block title %}Asset Management - Inicio{% endblock %}
+
+{% block contenido %}
+<div class="header">
+    <h1>🏠 Asset Management</h1>
+    <p>Selecciona una entidad para ver sus categorías y activos</p>
+</div>
+
+<div class="grid">
+    <div class="card"><h2>Entidades</h2><div class="number">{{ entities|length }}</div></div>
+    <div class="card"><h2>Categorías</h2><div class="number">{{ total_categorias }}</div></div>
+    <div class="card"><h2>Activos</h2><div class="number">{{ total_activos }}</div></div>
+    <div class="card"><h2>Planes Activos</h2><div class="number">{{ total_planes }}</div></div>
+</div>
+
+<div class="section">
+    <h2>📋 Mis Entidades</h2>
+    {% if entities %}
+        {% for entity in entities %}
+        <a class="item" href="{{ url_for('main.ver_entidad', entity_id=entity.id) }}">
+            <span class="chevron">›</span>
+            <div class="item-title">
+                {{ '🏠' if entity.entity_type == 'casa' else '🏢' }} {{ entity.name }}
             </div>
-            <div class="card">
-                <h2>Categorías</h2>
-                <div class="number">{{ categories|length }}</div>
+            <div class="item-details">
+                <strong>Ubicación:</strong> {{ entity.location or 'No especificada' }} |
+                <strong>Categorías:</strong> {{ entity.categories|length }} |
+                <strong>Activos:</strong> {{ entity.assets|length }}
             </div>
-            <div class="card">
-                <h2>Activos</h2>
-                <div class="number">{{ assets|length }}</div>
-            </div>
-            <div class="card">
-                <h2>Planes Activos</h2>
-                <div class="number">{{ plans|length }}</div>
-            </div>
-        </div>
-        
-        <!-- FORMULARIO CREAR ENTIDAD -->
-        <div class="section">
-            <h2>➕ Crear Nueva Entidad</h2>
-            <div class="form-section">
-                <form method="POST" action="/form/entities">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre de la Entidad</label>
-                            <input type="text" name="name" placeholder="Ej: Mi Casa, Oficina Central" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo</label>
-                            <select name="entity_type" required>
-                                <option value="">Selecciona el tipo...</option>
-                                <option value="casa">🏠 Casa</option>
-                                <option value="empresa">🏢 Empresa</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group form-row-full">
-                        <label>Ubicación (Opcional)</label>
-                        <input type="text" name="location" placeholder="Ej: San Miguelito, Panamá">
-                    </div>
-                    <button type="submit">✨ Crear Entidad</button>
-                </form>
-            </div>
-        </div>
-        
-        {% if entities %}
-        <div class="section">
-            <h2>📋 Entidades (Casas/Empresas)</h2>
-            {% for entity in entities %}
-            <div class="item">
-                <div class="item-title">{{ entity.name }}</div>
-                <div class="item-details">
-                    <strong>Tipo:</strong> {{ entity.entity_type | upper }} | 
-                    <strong>Ubicación:</strong> {{ entity.location or 'No especificada' }} | 
-                    <strong>Activos:</strong> {{ entity.assets|length }}
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="vacio">Aún no hay entidades. Crea la primera abajo.</div>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>➕ Crear Nueva Entidad</h2>
+    <div class="form-section">
+        <form method="POST" action="{{ url_for('main.create_entity_form') }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre de la Entidad</label>
+                    <input type="text" name="name" placeholder="Ej: Mi Casa, Oficina Central" required>
+                </div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select name="entity_type" required>
+                        <option value="">Selecciona el tipo...</option>
+                        <option value="casa">🏠 Casa</option>
+                        <option value="empresa">🏢 Empresa</option>
+                    </select>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        {% if categories %}
-        <div class="section">
-            <h2>🏷️ Categorías</h2>
-            {% for category in categories %}
-            <div class="item">
-                <div class="item-title">{{ category.name }}</div>
-                <div class="item-details">
-                    <strong>Entidad:</strong> {{ category.entity.name }} | 
-                    <strong>Activos:</strong> {{ category.assets|length }}
-                </div>
+            <div class="form-group">
+                <label>Ubicación (Opcional)</label>
+                <input type="text" name="location" placeholder="Ej: San Miguelito, Panamá">
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        {% if assets %}
-        <div class="section">
-            <h2>🚗 Activos</h2>
-            {% for asset in assets %}
-            <div class="item">
-                <div class="item-title">{{ asset.name }}</div>
-                <div class="item-details">
-                    <strong>Marca:</strong> {{ asset.brand }} {{ asset.model }} | 
-                    <strong>Precio Compra:</strong> ${{ asset.purchase_price }} | 
-                    <strong>Costo Total:</strong> ${{ asset.get_total_cost() }} |
-                    <strong>Estado:</strong> <span style="color: #667eea; font-weight: bold;">{{ asset.status }}</span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        {% if plans %}
-        <div class="section">
-            <h2>⚙️ Planes de Mantenimiento</h2>
-            {% for plan in plans %}
-            <div class="item">
-                <div class="item-title">
-                    {{ plan.name }}
-                    {% if plan.get_status() == 'overdue' %}
-                        <span class="badge badge-overdue">VENCIDO</span>
-                    {% elif plan.get_status() == 'due' %}
-                        <span class="badge badge-due">PRÓXIMO</span>
-                    {% else %}
-                        <span class="badge badge-ok">OK</span>
-                    {% endif %}
-                </div>
-                <div class="item-details">
-                    <strong>Intervalo:</strong> {{ plan.interval_value }} {{ plan.interval_type }} | 
-                    <strong>Próximo Vencimiento:</strong> {{ plan.next_due.strftime('%d/%m/%Y') if plan.next_due else 'N/A' }} |
-                    <strong>Costo Estimado:</strong> ${{ plan.estimated_cost }}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        
-        <div class="api-link">
-            <p>📡 <a href="/">API REST disponible en /api</a></p>
-            <p style="margin-top: 15px; font-size: 13px; color: #666; letter-spacing: 0.5px;">Usa curl o Postman para operaciones avanzadas</p>
-        </div>
+            <button type="submit">✨ Crear Entidad</button>
+        </form>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

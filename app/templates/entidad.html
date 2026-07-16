@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ entity.name }} - Asset Management{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">🏠 Inicio</a>
+    <span>›</span>
+    {{ entity.name }}
+</div>
+{% endblock %}
+
+{% block contenido %}
+<div class="header">
+    <h1>{{ '🏠' if entity.entity_type == 'casa' else '🏢' }} {{ entity.name }}</h1>
+    <p>{{ entity.location or 'Sin ubicación' }} · {{ entity.entity_type | upper }}</p>
+</div>
+
+<div class="grid">
+    <div class="card"><h2>Categorías</h2><div class="number">{{ entity.categories|length }}</div></div>
+    <div class="card"><h2>Activos</h2><div class="number">{{ entity.assets|length }}</div></div>
+    <div class="card"><h2>Inversión Total</h2><div class="texto">${{ '%.2f'|format(inversion_total) }}</div></div>
+</div>
+
+<div class="section">
+    <h2>🏷️ Categorías de {{ entity.name }}</h2>
+    {% if entity.categories %}
+        {% for category in entity.categories %}
+        <a class="item" href="{{ url_for('main.ver_categoria', category_id=category.id) }}">
+            <span class="chevron">›</span>
+            <div class="item-title">{{ category.name }}</div>
+            <div class="item-details">
+                {{ category.description or 'Sin descripción' }} |
+                <strong>Activos:</strong> {{ category.assets|length }}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="vacio">Esta entidad aún no tiene categorías. Crea la primera abajo.</div>
+    {% endif %}
+</div>
+
+<div class="section">
+    <h2>➕ Crear Categoría en {{ entity.name }}</h2>
+    <div class="form-section">
+        <form method="POST" action="{{ url_for('main.create_category_form', entity_id=entity.id) }}">
+            <div class="form-group">
+                <label>Nombre de la Categoría</label>
+                <input type="text" name="name" placeholder="Ej: Transporte, Electrodomésticos, Oficina" required>
+            </div>
+            <div class="form-group">
+                <label>Descripción (Opcional)</label>
+                <input type="text" name="description" placeholder="Ej: Vehículos y motos">
+            </div>
+            <button type="submit">✨ Crear Categoría</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
