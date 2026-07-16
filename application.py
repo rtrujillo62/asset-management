@@ -1,7 +1,4 @@
-from flask import Flask
+import os
+from app import create_app
 
-application = Flask(__name__)
-
-@application.route('/')
-def hello():
-    return {'status': 'ok'}
+application = create_app(os.getenv('FLASK_ENV', 'production'))
