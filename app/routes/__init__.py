@@ -8,3 +8,4 @@ from app.routes import categories
 from app.routes import assets
 from app.routes import maintenance_plans
 from app.routes import movements
+from app.routes import dashboard
