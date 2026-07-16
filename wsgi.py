@@ -3,8 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Importar directamente de run.py
-from run import app
+from app import create_app
 
-if __name__ == "__main__":
-    app.run()
+config_name = os.getenv('FLASK_ENV', 'production')
+app = create_app(config_name)
