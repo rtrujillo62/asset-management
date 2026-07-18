@@ -1,13 +1,15 @@
 from flask import render_template, abort
 from app.routes import main_bp
-from app.models import Entity, Category, Asset, MaintenancePlan, MovementLedger
+from app.models import Entity, EntityType, Category, Asset, MaintenancePlan, MovementLedger
 
 @main_bp.route('/dashboard')
 def dashboard():
     entities = Entity.query.order_by(Entity.name).all()
+    tipos_entidad = EntityType.query.order_by(EntityType.name).all()
     return render_template(
         'dashboard.html',
         entities=entities,
+        tipos_entidad=tipos_entidad,
         total_categorias=Category.query.count(),
         total_activos=Asset.query.count(),
         total_planes=MaintenancePlan.query.filter_by(is_active=True).count()

@@ -21,7 +21,7 @@
         <a class="item" href="{{ url_for('main.ver_entidad', entity_id=entity.id) }}">
             <span class="chevron">›</span>
             <div class="item-title">
-                {{ '🏠' if entity.entity_type == 'casa' else '🏢' }} {{ entity.name }}
+                🏷️ {{ entity.name }} <span style="font-weight:400; color:#999;">({{ entity.entity_type }})</span>
             </div>
             <div class="item-details">
                 <strong>Ubicación:</strong> {{ entity.location or 'No especificada' }} |
@@ -48,9 +48,15 @@
                     <label>Tipo</label>
                     <select name="entity_type" required>
                         <option value="">Selecciona el tipo...</option>
-                        <option value="casa">🏠 Casa</option>
-                        <option value="empresa">🏢 Empresa</option>
+                        {% for tipo in tipos_entidad %}
+                        <option value="{{ tipo.name }}">{{ tipo.name }}</option>
+                        {% endfor %}
                     </select>
+                    <p style="margin-top:6px; font-size:12px;">
+                        <a href="{{ url_for('main.catalogos') }}" style="color:#667eea;">
+                            + Agregar un tipo nuevo
+                        </a>
+                    </p>
                 </div>
             </div>
             <div class="form-group">

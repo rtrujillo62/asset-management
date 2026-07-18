@@ -1,7 +1,7 @@
 from flask import request, redirect, url_for, abort
 from app.routes import main_bp
 from app import db
-from app.models import Entity, Category, Asset, MaintenancePlan, MovementLedger
+from app.models import Entity, EntityType, Category, Asset, MaintenancePlan, MovementLedger
 from datetime import datetime
 
 @main_bp.route('/form/entities', methods=['POST'])
@@ -9,6 +9,8 @@ def create_entity_form():
     name = request.form.get('name')
     entity_type = request.form.get('entity_type')
     if not name or not entity_type:
+        return redirect(url_for('main.dashboard'))
+    if not EntityType.query.filter_by(name=entity_type).first():
         return redirect(url_for('main.dashboard'))
     entity = Entity(name=name, entity_type=entity_type,
                     location=request.form.get('location') or None)
