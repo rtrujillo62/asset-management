@@ -43,10 +43,59 @@
     <h2>➕ Crear Categoría en {{ entity.name }}</h2>
     <div class="form-section">
         <form method="POST" action="{{ url_for('main.create_category_form', entity_id=entity.id) }}">
-            <div class="form-group">
+            <div class="form-group" style="position:relative;">
                 <label>Nombre de la Categoría</label>
-                <input type="text" name="name" placeholder="Ej: Transporte, Electrodomésticos, Oficina" required>
+                <input type="text" name="name" id="input-categoria"
+                       placeholder="Ej: Transporte, Electrodomésticos, Oficina" required
+                       autocomplete="off">
+                <div id="sugerencias-categoria" style="
+                    display:none; position:absolute; top:100%; left:0; right:0;
+                    background:white; border:1px solid #ddd; border-radius:6px;
+                    box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:10; max-height:180px; overflow-y:auto;">
+                </div>
             </div>
+
+            <script>
+            (function() {
+                const nombres = {{ nombres_categorias|tojson }};
+                const input = document.getElementById('input-categoria');
+                const caja = document.getElementById('sugerencias-categoria');
+
+                function mostrarSugerencias() {
+                    const texto = input.value.trim().toLowerCase();
+                    const coincidencias = texto
+                        ? nombres.filter(n => n.toLowerCase().includes(texto))
+                        : nombres;
+
+                    if (coincidencias.length === 0) {
+                        caja.style.display = 'none';
+                        return;
+                    }
+
+                    caja.innerHTML = coincidencias.map(n =>
+                        `<div class="opcion-categoria" style="padding:10px 14px; cursor:pointer;">${n}</div>`
+                    ).join('');
+                    caja.style.display = 'block';
+
+                    caja.querySelectorAll('.opcion-categoria').forEach(el => {
+                        el.addEventListener('mouseenter', () => el.style.background = '#f0f4ff');
+                        el.addEventListener('mouseleave', () => el.style.background = 'white');
+                        el.addEventListener('click', () => {
+                            input.value = el.textContent;
+                            caja.style.display = 'none';
+                        });
+                    });
+                }
+
+                input.addEventListener('focus', mostrarSugerencias);
+                input.addEventListener('input', mostrarSugerencias);
+                document.addEventListener('click', (e) => {
+                    if (!input.contains(e.target) && !caja.contains(e.target)) {
+                        caja.style.display = 'none';
+                    }
+                });
+            })();
+            </script>
             <div class="form-group">
                 <label>Descripción (Opcional)</label>
                 <input type="text" name="description" placeholder="Ej: Vehículos y motos">

@@ -21,7 +21,15 @@ def ver_entidad(entity_id):
     if not entity:
         abort(404)
     inversion_total = sum(a.get_total_cost() for a in entity.assets)
-    return render_template('entidad.html', entity=entity, inversion_total=inversion_total)
+    nombres_categorias = sorted({
+        c.name for c in Category.query.with_entities(Category.name).distinct()
+    })
+    return render_template(
+        'entidad.html',
+        entity=entity,
+        inversion_total=inversion_total,
+        nombres_categorias=nombres_categorias
+    )
 
 @main_bp.route('/categoria/<int:category_id>')
 def ver_categoria(category_id):
