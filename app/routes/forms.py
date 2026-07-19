@@ -1,7 +1,7 @@
 from flask import request, redirect, url_for, abort
 from app.routes import main_bp
 from app import db
-from app.models import Entity, EntityType, Category, Asset, MaintenancePlan, MovementLedger
+from app.models import Entity, EntityType, Category, CategoryTemplate, Asset, MaintenancePlan, MovementLedger
 from datetime import datetime
 
 @main_bp.route('/form/entities', methods=['POST'])
@@ -31,6 +31,24 @@ def create_category_form(entity_id):
     db.session.add(category)
     db.session.commit()
     return redirect(url_for('main.ver_categoria', category_id=category.id))
+
+@main_bp.route('/form/entidad/<int:entity_id>/aplicar-plantillas', methods=['POST'])
+def aplicar_plantillas_categoria(entity_id):
+    entity = Entity.query.get(entity_id)
+    if not entity:
+        abort(404)
+    ids_seleccionados = request.form.getlist('plantilla_id')
+    nombres_ya_aplicados = {c.name for c in entity.categories}
+    for pid in ids_seleccionados:
+        plantilla = CategoryTemplate.query.get(int(pid))
+        if plantilla and plantilla.name not in nombres_ya_aplicados:
+            db.session.add(Category(
+                entity_id=entity.id,
+                name=plantilla.name,
+                description=plantilla.description
+            ))
+    db.session.commit()
+    return redirect(url_for('main.ver_entidad', entity_id=entity_id))
 
 @main_bp.route('/form/categoria/<int:category_id>/assets', methods=['POST'])
 def create_asset_form(category_id):
@@ -72,6 +90,36 @@ def create_asset_form(category_id):
             movement_type='purchase', description=f'Compra: {asset.name}',
             amount=price, movement_date=fecha
         ))
+
+    db.session.commit()
+    return redirect(url_for('main.ver_activo', asset_id=asset.id))
+
+
+@main_bp.route('/activo/<int:asset_id>/editar', methods=['POST'])
+def editar_activo(asset_id):
+    asset = Asset.query.get(asset_id)
+    if not asset:
+        abort(404)
+
+    name = request.form.get('name')
+    purchase_date = request.form.get('purchase_date')
+    if not name or not purchase_date:
+        return redirect(url_for('main.editar_activo_form', asset_id=asset_id))
+
+    km = request.form.get('current_kilometers')
+    hrs = request.form.get('current_hours')
+
+    asset.name = name
+    asset.brand = request.form.get('brand') or None
+    asset.model = request.form.get('model') or None
+    asset.year = int(request.form.get('year')) if request.form.get('year') else None
+    asset.serial_number = request.form.get('serial_number') or None
+    asset.purchase_date = datetime.fromisoformat(purchase_date)
+    asset.purchase_price = float(request.form.get('purchase_price') or 0)
+    asset.current_kilometers = float(km) if km else None
+    asset.current_hours = float(hrs) if hrs else None
+    asset.requires_maintenance = bool(request.form.get('requires_maintenance'))
+    asset.updated_at = datetime.utcnow()
 
     db.session.commit()
     return redirect(url_for('main.ver_activo', asset_id=asset.id))

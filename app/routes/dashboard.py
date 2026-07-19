@@ -1,6 +1,6 @@
 from flask import render_template, abort
 from app.routes import main_bp
-from app.models import Entity, EntityType, Category, Asset, MaintenancePlan, MovementLedger
+from app.models import Entity, EntityType, Category, CategoryTemplate, Asset, MaintenancePlan, MovementLedger
 
 @main_bp.route('/dashboard')
 def dashboard():
@@ -24,11 +24,17 @@ def ver_entidad(entity_id):
     nombres_categorias = sorted({
         c.name for c in Category.query.with_entities(Category.name).distinct()
     })
+    nombres_ya_aplicados = {c.name for c in entity.categories}
+    plantillas_disponibles = [
+        t for t in CategoryTemplate.query.order_by(CategoryTemplate.name).all()
+        if t.name not in nombres_ya_aplicados
+    ]
     return render_template(
         'entidad.html',
         entity=entity,
         inversion_total=inversion_total,
-        nombres_categorias=nombres_categorias
+        nombres_categorias=nombres_categorias,
+        plantillas_disponibles=plantillas_disponibles
     )
 
 @main_bp.route('/categoria/<int:category_id>')
@@ -47,3 +53,11 @@ def ver_activo(asset_id):
     movimientos = MovementLedger.query.filter_by(asset_id=asset.id)\
         .order_by(MovementLedger.movement_date.desc()).all()
     return render_template('activo.html', asset=asset, movimientos=movimientos)
+
+
+@main_bp.route('/activo/<int:asset_id>/editar')
+def editar_activo_form(asset_id):
+    asset = Asset.query.get(asset_id)
+    if not asset:
+        abort(404)
+    return render_template('editar_activo.html', asset=asset)

@@ -40,6 +40,43 @@
 </div>
 
 <div class="section">
+    <h2>Plantillas de Categoría</h2>
+    <p style="color:#666; margin-bottom:12px;">
+        Este es el catálogo maestro que puedes aplicar de una vez al crear
+        cada entidad (botón "Aplicar Categorías Estándar"). Agregar o quitar
+        una plantilla aquí no afecta las categorías que ya aplicaste antes
+        en tus entidades — solo cambia lo que ofrece el catálogo hacia adelante.
+    </p>
+
+    {% if plantillas %}
+        {% for p in plantillas %}
+        <div class="item" style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+            <span>
+                <strong>{{ p.name }}</strong><br>
+                <span style="font-size:13px; color:#888;">{{ p.description or 'Sin descripción' }}</span>
+            </span>
+            <form method="POST" action="{{ url_for('main.eliminar_plantilla_categoria', plantilla_id=p.id) }}"
+                  onsubmit="return confirm('¿Eliminar la plantilla {{ p.name }} del catálogo? Las categorías ya creadas con ella no se verán afectadas.');">
+                <button type="submit" class="btn-borrar">Eliminar</button>
+            </form>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="color:#999;">Aún no hay plantillas registradas.</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('main.crear_plantilla_categoria') }}" style="margin-top:20px;">
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <input type="text" name="name" placeholder="Ej: Equipos de Cocina Industrial" required
+                   style="flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;">
+        </div>
+        <textarea name="description" placeholder="Descripción (opcional): qué tipo de activos incluye"
+                  style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px; min-height:60px; font-family:inherit;"></textarea>
+        <button type="submit">Agregar Plantilla</button>
+    </form>
+</div>
+
+<div class="section">
     <h2>Categorías ya utilizadas</h2>
     <p style="color:#666; margin-bottom:12px;">
         Estos son los nombres de categoría que ya has usado en tus entidades.

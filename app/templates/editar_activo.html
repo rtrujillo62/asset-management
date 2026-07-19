@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Editar {{ asset.name }} - Asset Management{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb">
+    <a href="{{ url_for('main.dashboard') }}">🏠 Inicio</a>
+    <span>›</span>
+    <a href="{{ url_for('main.ver_entidad', entity_id=asset.entity.id) }}">{{ asset.entity.name }}</a>
+    <span>›</span>
+    <a href="{{ url_for('main.ver_categoria', category_id=asset.category.id) }}">{{ asset.category.name }}</a>
+    <span>›</span>
+    <a href="{{ url_for('main.ver_activo', asset_id=asset.id) }}">{{ asset.name }}</a>
+    <span>›</span>
+    Editar
+</div>
+{% endblock %}
+
+{% block contenido %}
+<div class="header">
+    <h1>✏️ Editar {{ asset.name }}</h1>
+    <p>Corrige los datos del activo. Sus planes y movimientos no se ven afectados.</p>
+</div>
+
+<div class="section">
+    <div class="form-section">
+        <form method="POST" action="{{ url_for('main.editar_activo', asset_id=asset.id) }}">
+            <div class="form-group">
+                <label>Nombre del Activo</label>
+                <input type="text" name="name" value="{{ asset.name }}" required>
+            </div>
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>Marca</label>
+                    <input type="text" name="brand" value="{{ asset.brand or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Modelo</label>
+                    <input type="text" name="model" value="{{ asset.model or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Año</label>
+                    <input type="number" name="year" min="1900" max="2100" value="{{ asset.year or '' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Serie / Número de Serie (Opcional)</label>
+                <input type="text" name="serial_number" value="{{ asset.serial_number or '' }}">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fecha de Compra</label>
+                    <input type="date" name="purchase_date"
+                           value="{{ asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio de Compra ($)</label>
+                    <input type="number" step="0.01" name="purchase_price" value="{{ asset.purchase_price or 0 }}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Odómetro actual (km) — opcional</label>
+                    <input type="number" step="0.01" name="current_kilometers" value="{{ asset.current_kilometers or '' }}">
+                </div>
+                <div class="form-group">
+                    <label>Horómetro actual (horas) — opcional</label>
+                    <input type="number" step="0.01" name="current_hours" value="{{ asset.current_hours or '' }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="requires_maintenance" value="1"
+                           style="width:auto; margin-right:8px;" {% if asset.requires_maintenance %}checked{% endif %}>
+                    Requiere mantenimiento
+                </label>
+            </div>
+            <button type="submit">💾 Guardar Cambios</button>
+            <a href="{{ url_for('main.ver_activo', asset_id=asset.id) }}"
+               style="margin-left:12px; color:#888; text-decoration:none;">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
