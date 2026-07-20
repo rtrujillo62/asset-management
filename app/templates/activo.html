@@ -20,7 +20,7 @@
         <p>
             {{ asset.brand or '' }} {{ asset.model or '' }}{% if asset.year %} ({{ asset.year }}){% endif %}
             {%- if asset.serial_number %} · Serie: {{ asset.serial_number }}{% endif %}
-            · Comprado el {{ asset.purchase_date.strftime('%d/%m/%Y') }}
+            {%- if asset.purchase_date %} · Comprado el {{ asset.purchase_date.strftime('%d/%m/%Y') }}{% endif %}
         </p>
     </div>
     <a href="{{ url_for('main.editar_activo_form', asset_id=asset.id) }}"

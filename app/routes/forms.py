@@ -57,11 +57,11 @@ def create_asset_form(category_id):
         abort(404)
     name = request.form.get('name')
     purchase_date = request.form.get('purchase_date')
-    if not name or not purchase_date:
+    if not name:
         return redirect(url_for('main.ver_categoria', category_id=category_id))
 
     price = float(request.form.get('purchase_price') or 0)
-    fecha = datetime.fromisoformat(purchase_date)
+    fecha = datetime.fromisoformat(purchase_date) if purchase_date else None
     km = request.form.get('current_kilometers')
     hrs = request.form.get('current_hours')
 
@@ -88,7 +88,7 @@ def create_asset_form(category_id):
         db.session.add(MovementLedger(
             entity_id=asset.entity_id, asset_id=asset.id,
             movement_type='purchase', description=f'Compra: {asset.name}',
-            amount=price, movement_date=fecha
+            amount=price, movement_date=fecha or datetime.utcnow()
         ))
 
     db.session.commit()
@@ -103,7 +103,7 @@ def editar_activo(asset_id):
 
     name = request.form.get('name')
     purchase_date = request.form.get('purchase_date')
-    if not name or not purchase_date:
+    if not name:
         return redirect(url_for('main.editar_activo_form', asset_id=asset_id))
 
     km = request.form.get('current_kilometers')
@@ -114,7 +114,7 @@ def editar_activo(asset_id):
     asset.model = request.form.get('model') or None
     asset.year = int(request.form.get('year')) if request.form.get('year') else None
     asset.serial_number = request.form.get('serial_number') or None
-    asset.purchase_date = datetime.fromisoformat(purchase_date)
+    asset.purchase_date = datetime.fromisoformat(purchase_date) if purchase_date else None
     asset.purchase_price = float(request.form.get('purchase_price') or 0)
     asset.current_kilometers = float(km) if km else None
     asset.current_hours = float(hrs) if hrs else None

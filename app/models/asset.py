@@ -15,7 +15,7 @@ class Asset(db.Model):
     year = db.Column(db.Integer)
     serial_number = db.Column(db.String(255), unique=True, nullable=True)
 
-    purchase_date = db.Column(db.DateTime, nullable=False)
+    purchase_date = db.Column(db.DateTime, nullable=True)
     purchase_price = db.Column(db.Float)
     warranty_expiry = db.Column(db.DateTime)
 
