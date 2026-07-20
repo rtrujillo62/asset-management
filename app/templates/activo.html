@@ -176,6 +176,7 @@
     {% endif %}
 </div>
 
+{% if asset.requires_maintenance %}
 <!-- CREAR PLAN -->
 <div class="section">
     <h2>➕ Crear Plan de Mantenimiento a la Medida</h2>
@@ -258,6 +259,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 <!-- MOVIMIENTOS -->
 <div class="section">

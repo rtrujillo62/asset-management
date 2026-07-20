@@ -92,7 +92,7 @@ def create_asset_form(category_id):
         ))
 
     db.session.commit()
-    return redirect(url_for('main.ver_activo', asset_id=asset.id))
+    return redirect(url_for('main.ver_categoria', category_id=category.id))
 
 
 @main_bp.route('/activo/<int:asset_id>/editar', methods=['POST'])
